@@ -5,9 +5,22 @@ class BayesianNetwork:
         f = open(filename, 'r') 
         N = int(f.readline())
         lines = f.readlines()
+        self.nodesX=set()
+        self.nodeDomain={}
+        self.nodeParent={}
         for line in lines:
             node, parents, domain, shape, probabilities = self.__extract_model(line)
             # YOUR CODE HERE
+            self.nodesX.add(node)
+            self.nodeDomain[node]=domain
+            self.nodeParent[node]=parents
+            
+
+                
+
+            print(parents)
+            print(probabilities[])
+
 
 
         
@@ -18,6 +31,10 @@ class BayesianNetwork:
         f = open(filename, 'r')
         query_variables, evidence_variables = self.__extract_query(f.readline())
         # YOUR CODE HERE
+        #Tim tap Z cac node khong nam trong cau truy van (can loai bobo)
+        nodesZ=self.nodesX.difference(query_variables)
+
+        print(nodesZ)
 
 
         f.close()
