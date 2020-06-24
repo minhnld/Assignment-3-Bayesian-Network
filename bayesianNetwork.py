@@ -14,16 +14,27 @@ class BayesianNetwork:
             self.nodesX.add(node)
             self.nodeDomain[node]=domain
             self.nodeParent[node]=parents
-            
 
-                
+            parentsList=parents.copy()
+            probList=[]
+            probListFinal=[]
+            if parentsList:
+                for d in self.nodeDomain[parentsList[0]]:
+                    parentsList_=parentsList[1:].copy()+self.nodeDomain[node]
+                    probListItem=[[d]]
+                    while parentsList_:
+                        try:
+                            for d_ in self.nodeDomain[parentsList_[0]]:
+                                probListItem[0]=probListItem[0]+[d_]
+                                probList.append(probListItem[0])
+                            parentsList_=parentsList_[1:]
+                        except KeyError:
+                            for fa in probList:
+                                probListFinal.append(fa+[parentsList_[0]])
+                            parentsList_=parentsList_[1:]
+            print(probListFinal)
+            print(probabilities)
 
-            print(parents)
-            print(probabilities[])
-
-
-
-        
         f.close()
 
     def exact_inference(self, filename):
