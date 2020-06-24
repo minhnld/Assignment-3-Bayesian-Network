@@ -1,5 +1,5 @@
 import numpy as np
-
+from functools import reduce 
 class BayesianNetwork:
     def __init__(self, filename):
         f = open(filename, 'r') 
@@ -8,34 +8,70 @@ class BayesianNetwork:
         self.nodesX=set()
         self.nodeDomain={}
         self.nodeParent={}
+        self.nodeProb={}
+        self.nodeFactor=[]
         for line in lines:
             node, parents, domain, shape, probabilities = self.__extract_model(line)
             # YOUR CODE HERE
             self.nodesX.add(node)
             self.nodeDomain[node]=domain
             self.nodeParent[node]=parents
+            
+            sumParent=""
+            for p in parents:
+                sumParent+=p
+            self.nodeFactor.append(sumParent+node)
 
-            parentsList=parents.copy()
+            mulShape=1
+            if (type(shape)==tuple):
+                for s in shape:
+                    mulShape*=s
+            else:
+                mulShape=1
+
             probList=[]
-            probListFinal=[]
-            if parentsList:
-                for d in self.nodeDomain[parentsList[0]]:
-                    parentsList_=parentsList[1:].copy()+self.nodeDomain[node]
-                    probListItem=[[d]]
-                    while parentsList_:
-                        try:
-                            for d_ in self.nodeDomain[parentsList_[0]]:
-                                probListItem[0]=probListItem[0]+[d_]
-                                probList.append(probListItem[0])
-                            parentsList_=parentsList_[1:]
-                        except KeyError:
-                            for fa in probList:
-                                probListFinal.append(fa+[parentsList_[0]])
-                            parentsList_=parentsList_[1:]
-            print(probListFinal)
-            print(probabilities)
+            if mulShape!=1:
+                for i in range(mulShape):
+                    probList.append({})
+            else:
+                for i in range(shape):
+                    probList.append({})
 
+            # objectProbList={}
+            len_parents=len(parents)
+            mulShape_=mulShape
+            i=-1
+            prob=np.reshape(probabilities,-1)
+            if (mulShape!=1):
+                while (mulShape_!=1):
+                    i+=1
+                    index=-1
+                    mulShape_=int(mulShape_/shape[i])
+                    if (i<len_parents):
+                        while (index!=mulShape-1):
+                            for k in self.nodeDomain[parents[i]]:
+                                for j in range(mulShape_):
+                                    index+=1
+                                    probList[index][parents[i]]=k
+                    else:
+                        while (index!=mulShape-1):
+                            for d in self.nodeDomain[node]:
+                                index+=1
+                                probList[index][node]=d
+                                probList[index]['prob']=prob[index]
+            else:
+                for k in range(shape):
+                    probList[k][node]=self.nodeDomain[node][k]
+                    probList[k]['prob']=prob[k]
+
+            self.nodeProb[self.nodeFactor[-1:][0]]=probList
+            # print(probList)
+        print(self.nodeProb)
         f.close()
+
+    def findFactorWithVariable(self,factors,var):
+        return list(filter(lambda factor: var in factor,factors))
+
 
     def exact_inference(self, filename):
         result = 0
@@ -44,6 +80,7 @@ class BayesianNetwork:
         # YOUR CODE HERE
         #Tim tap Z cac node khong nam trong cau truy van (can loai bobo)
         nodesZ=self.nodesX.difference(query_variables)
+        print(self.findFactorWithVariable(self.nodeFactor,'D'))
 
         print(nodesZ)
 
