@@ -85,6 +85,8 @@ class BayesianNetwork:
         for s in sample:
             result+=str(s)
         return result
+    def varEliminate(self,factor):
+        
 
     def mulFactor(self,facA,facB):
         shareVars,mergeVars=self.findShareVariableAndMerge(facA,facB)
