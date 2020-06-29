@@ -1,5 +1,8 @@
 import numpy as np
 from functools import reduce 
+import copy 
+import collections, functools, operator
+
 class BayesianNetwork:
     def __init__(self, filename):
         f = open(filename, 'r') 
@@ -92,7 +95,6 @@ class BayesianNetwork:
         for f in factorProb:
             if eliminateVar in factor: del f[eliminateVar]
             mergeName=""
-            mergeNameList={}
             for r in remainingSet:
                 mergeName+=f[r]
                 del f[r]
