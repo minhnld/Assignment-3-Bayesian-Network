@@ -63,7 +63,6 @@ class BayesianNetwork:
                 for k in range(shape):
                     probList[k][node]=self.nodeDomain[node][k]
                     probList[k]['prob']=prob[k]
-
             self.nodeProb[self.nodeFactor[-1:][0]]=probList
             # print(probList)
         # print(self.nodeProb)
@@ -80,13 +79,54 @@ class BayesianNetwork:
         mergeVars=set(varA).union(set(varB))
         print(mergeVars)
         return shareVars,mergeVars
+
     def setIntoString(self,sample):
         result=""
         for s in sample:
             result+=str(s)
         return result
-    def varEliminate(self,factor):
+
+    def varEliminate(self,factor,eliminateVar):
+        remainingSet=list(set(factor).difference(set(eliminateVar)))
+        for f in factor:
+            if eliminateVar in factor: del f[eliminateVar]
         
+        
+        # mulShapeFactor=1
+        # for r in set(remainingSet):
+        #     mulShapeFactor*=len(self.nodeDomain[r])
+
+        # probList=[]
+        # for i in range(mulShapeFactor):
+        #     probList.append({})
+
+        # len_remainingSet=len(remainingSet)-1
+        # mulShape_=mulShapeFactor
+        # i=-1
+
+        # prob=[]
+        # for m in mulShapeFactor:
+        #     pro
+
+        # while (mulShape_!=1):
+        #     i+=1
+        #     index=-1
+        #     mulShape_=int(mulShape_/len(self.nodeDomain[r]))
+        #     if (i<len_remainingSet):
+        #         while (index!=mulShapeFactor-1):
+        #             for k in self.nodeDomain[remainingSet[i]]:
+        #                 for j in range(mulShape_):
+        #                     index+=1
+        #                     probList[index][remainingSet[i]]=k
+        #     else:
+        #         i+=1
+        #         while (index!=mulShapeFactor-1):
+        #             for d in self.nodeDomain[remainingSet[i]]:
+        #                 index+=1
+        #                 probList[index][remainingSet[i]]=d
+        #                 probList[index]['prob']=prob[index]
+        
+        self.nodeProb[self.nodeFactor[-1:][0]]=probList
 
     def mulFactor(self,facA,facB):
         shareVars,mergeVars=self.findShareVariableAndMerge(facA,facB)
