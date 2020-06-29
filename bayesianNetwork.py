@@ -4,6 +4,9 @@ import numpy as np
 from functools import reduce 
 import copy 
 import collections, functools, operator
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 class BayesianNetwork:
@@ -150,8 +153,11 @@ class BayesianNetwork:
         #Tim tap Z cac node khong nam trong cau truy van (can loai bobo)
         nodesZ=self.nodesX.difference(query_variables)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 =======
+=======
+>>>>>>> Stashed changes
         print(query_variables)
         FZ=[]
         for z in nodesZ :
@@ -160,6 +166,9 @@ class BayesianNetwork:
                     #tap cac nhan to F co chua bien Z
                     FZ.append(n)
             print(FZ)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         print(nodesZ)
         print(FZ)
