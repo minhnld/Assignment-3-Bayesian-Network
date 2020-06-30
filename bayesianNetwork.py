@@ -92,17 +92,23 @@ class BayesianNetwork:
     def varEliminate(self,factor,eliminateVar):
         remainingSet=list(set(factor).difference(set(eliminateVar)))
         factorProb=copy.deepcopy(self.nodeProb[factor])
+        print('Factor ',self.nodeProb[factor])
+        
+
         for f in factorProb:
-            if eliminateVar in factor: del f[eliminateVar]
+            del f[eliminateVar]
             mergeName=""
             for r in remainingSet:
                 mergeName+=f[r]
                 del f[r]
             f[mergeName]=f['prob']
             del f['prob']
+        
+        print('107777:',factorProb)
         result = dict(functools.reduce(operator.add, 
         map(collections.Counter, factorProb))) 
         resultList=[]
+        print('106:',result)
         for key in result:
             tempObj={}
             for r in remainingSet:
@@ -111,12 +117,13 @@ class BayesianNetwork:
                         tempObj[r]=d
             tempObj['prob']=result[key]
             resultList.append(tempObj)
+        print('116:',resultList)
 
         # print(factor)
         # print(factorProb)
         # print(result)
         # print(resultList)
-        return resultList        
+        return {self.setIntoString(set(remainingSet)):resultList}        
 
 
     def mulFactor(self,facA,facB):
@@ -127,7 +134,11 @@ class BayesianNetwork:
         SetShareInFacB=self.nodeProb[facB]
                 
         mulFactorAB=[]
-        for i in range(len(SetShareInFacA) if (len(SetShareInFacA)>len(SetShareInFacB)) else len(SetShareInFacB)):
+        lenMulFactorAB=1
+        for me in mergeVars:
+            lenMulFactorAB*=len(self.nodeDomain[me])
+
+        for i in range(lenMulFactorAB):
             mulFactorAB.append({})
         j=-1
         countShareVar=len(shareVars)
@@ -156,17 +167,82 @@ class BayesianNetwork:
         # YOUR CODE HERE
         #Tim tap Z cac node khong nam trong cau truy van (can loai bobo)
         nodesZ=self.nodesX.difference(query_variables)
-        
+        prob=copy.deepcopy(self.nodeProb)
         print(query_variables)
-        FZ=[]
         for z in nodesZ :
+            FZ=[]
             for n in self.nodeFactor:
                 if z in n :
                     #tap cac nhan to F co chua bien Z
                     FZ.append(n)
-            print(FZ)
-        print(nodesZ)
+            newFactorPhi=""
+            FZcopy=copy.deepcopy(FZ)
+            mulFac=FZcopy.pop()
+            if (FZcopy):
+                while (FZcopy):
+                    print("fasfsaf:",mulFac)
+                    print("fasfsaf:",self.nodeFactor)
+                    mulFacOne=FZcopy.pop()
+                    print("fasfsaf:",mulFacOne)
 
+                    resultMulFac=self.mulFactor(mulFac,mulFacOne)
+                    
+                    del self.nodeProb[mulFac]
+                    self.nodeFactor.remove(mulFac)
+                    del self.nodeProb[mulFacOne]
+                    self.nodeFactor.remove(mulFacOne)
+
+                    for key in resultMulFac:
+                        self.nodeProb[key]=resultMulFac[key]
+                        self.nodeFactor.append(key)
+                        mulFac=key
+                print('192:',self.nodeProb)
+                print('193:',self.nodeFactor)
+                resultVarEli=self.varEliminate(mulFac,z)
+                for keyV in resultVarEli:
+                    del self.nodeProb[mulFac]
+                    self.nodeFactor.remove(mulFac)
+                    self.nodeProb[keyV]=resultVarEli[keyV]
+                    self.nodeFactor.append(keyV)
+            else:
+                resultVarEli=self.varEliminate(mulFac,z)
+                for keyV in resultVarEli:
+                    print(keyV)
+                    print("203:",self.nodeFactor)
+                    del self.nodeProb[mulFac]
+                    self.nodeFactor.remove(mulFac)
+                    self.nodeProb[keyV]=resultVarEli[keyV]
+                    self.nodeFactor.append(keyV)    
+            # print(FZ)
+            
+        print("210:",self.nodeFactor)
+        print("211:",self.nodeProb)
+        mulFac=self.nodeFactor.pop()
+        resultF=None
+        if (self.nodeFactor):
+            while (self.nodeFactor):
+                mulFacOne=self.nodeFactor.pop()
+                print("219:",mulFac)
+                print("221:",mulFacOne)     
+
+                print("220:",self.nodeFactor)
+                print("220:",self.nodeProb)
+                resultMulFac=self.mulFactor(mulFac,mulFacOne)
+
+
+                del self.nodeProb[mulFac]
+                del self.nodeProb[mulFacOne]
+                for key in resultMulFac:
+                    self.nodeProb[key]=resultMulFac[key]
+                    self.nodeFactor.append(key)
+                    mulFac=key
+                if (len(self.nodeFactor)==1):
+                    break
+            resultF= self.nodeProb[mulFac]
+        else:
+            resultF= self.nodeProb[mulFac]
+            
+        # print(nodesZ)
         # testT=self.mulFactor('D','IDG')
         # for key in testT :
         #     self.nodeProb[key]=testT[key]
@@ -174,6 +250,20 @@ class BayesianNetwork:
         # print(nodesZ)
         # self.varEliminate('DGI','D')
         # print(self.nodeProb['IDG'])
+        len_query=len(query_variables)
+        print('247:',resultF)
+        print('248',query_variables)
+        for re in resultF:
+            coun=0
+            for key in query_variables:
+                print('252:',re)
+                if (re[key]==query_variables[key]):
+                    coun=coun+1
+                    if coun==len_query:
+                        print('255:',re['prob'])
+                        result=re['prob']
+        # print(self.mulFactor('IDG','IS'))
+        # print(self.varEliminate('IS',"S"))
         f.close()
         return result
 
