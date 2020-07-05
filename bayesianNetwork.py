@@ -83,21 +83,13 @@ class BayesianNetwork:
                     probList[k][self.acronymDict[node]]=self.nodeDomain[self.acronymDict[node]][k]
                     probList[k]['prob']=prob[k]
             self.nodeProb[self.nodeFactor[-1:][0]]=probList
-            # print(probList)
-        # print(self.nodeProb)
         f.close()
 
-    def findFactorWithVariable(self,factors,var):
-        return list(filter(lambda factor: var in factor,factors))
 
-    def findProbWithVariable(self,probDis,var):
-        return [item for item in probDis if item.get(var)]
 
     def findShareVariableAndMerge(self,varA,varB):
         shareVars=set(varA).intersection(set(varB))
         mergeVars=set(varA).union(set(varB))
-
-        # print(mergeVars)
         return shareVars,mergeVars
 
     def setIntoString(self,sample):
@@ -108,9 +100,7 @@ class BayesianNetwork:
 
     def varEliminate(self,factor,eliminateVar):
         remainingSet=list(set(factor).difference(set(eliminateVar)))
-        factorProb=copy.deepcopy(self.nodeProb[factor])
-        # print('Factor ',self.nodeProb[factor])
-        
+        factorProb=copy.deepcopy(self.nodeProb[factor])        
         recallDict={}
         for f in factorProb:
             if (f!={}):
@@ -126,23 +116,16 @@ class BayesianNetwork:
                 f[mergeName]=f['prob']
                 del f['prob']
         
-        # print('107777:',factorProb)
         result = dict(functools.reduce(operator.add, 
         map(collections.Counter, factorProb))) 
         resultList=[]
-        # print('106:',result)
         for key in result:
             tempObj={}
             for reKey in recallDict[key]:
                 tempObj[reKey]=recallDict[key][reKey]
             tempObj['prob']=result[key]
             resultList.append(tempObj)
-        # print('116:',resultList)
 
-        # print(factor)
-        # print(factorProb)
-        # print(result)
-        # print(resultList)
         return {self.setIntoString(set(remainingSet)):resultList}    
 
     def varEliminateByEvidence(self,evidence):
@@ -151,13 +134,10 @@ class BayesianNetwork:
                 if self.acronymDict[ev] in noFa:
                     index=0
                     while (index!=len(self.nodeProb[noFa])):
-                        # print('135:',noPr)
-                        # print('136:',evidence[ev])
                         if (self.nodeProb[noFa][index][self.acronymDict[ev]]!=evidence[ev]):
                             self.nodeProb[noFa].pop(index)
                         else:
                             index+=1
-                        # print('138:',self.nodeProb[noFa])
 
     def mulFactorOverlap(self,elementOne,elementTwo,name):
         shareVars=set(name)
@@ -199,12 +179,10 @@ class BayesianNetwork:
                         if (fA[s]==fB[s]):
                             countS+=1
                             if countS==countShareVar:
-                                # j=j+1
                                 tempObj={}
                                 tempObj['prob']=fA['prob']*fB['prob']
                                 countS=0
                                 for m in mergeVars:
-                                    # mulFactorAB[j][m]=fShareA[m] if (fShareA[m]) else fShareB[m]
                                     try:
                                         tempObj[m]=fA[m]
                                     except KeyError:
@@ -217,34 +195,22 @@ class BayesianNetwork:
         result = 0
         f = open(filename, 'r')
         query_variables, evidence_variables = self.__extract_query(f.readline())
-
-
-        # nodeX=copy.deepcopy(self.nodesX)
-        # nodeDomain=copy.deepcopy(self.nodeDomain)
-        # nodeProb=copy.deepcopy(self.nodeProb)
-        # nodeFactor=copy.deepcopy(self.nodeFactor)
         # YOUR CODE HERE
         #Tim tap X cac node khong nam trong cau truy van (can loai bobo)
         if not(evidence_variables):
             for qu in query_variables:
                 self.nodesX.remove(self.acronymDict[qu])
-            # print(self.nodesX)
             for z in self.nodesX :
                 FZ=[]
                 for n in self.nodeFactor:
                     if z in n :
                         #tap cac nhan to F co chua bien Z
                         FZ.append(n)
-                # FZcopy=copy.deepcopy(FZ)
                 mulFac=FZ.pop()
                 if (FZ):
                     while (FZ):
-                        # print("181:",mulFac)
-                        # print("182:",self.nodeFactor)
-                        mulFacOne=FZ.pop()
-                        # print("183:",mulFacOne)
-                        # print("184:",self.nodeProb)
 
+                        mulFacOne=FZ.pop()
                         resultMulFac=self.mulFactor(mulFac,mulFacOne)
                         
                         del self.nodeProb[mulFac]
@@ -256,14 +222,8 @@ class BayesianNetwork:
                             self.nodeProb[key]=resultMulFac[key]
                             self.nodeFactor.append(key)
                             mulFac=key
-                    # print('192:',self.nodeProb)
-                    # print('193:',self.nodeFactor)
+
                     resultVarEli=self.varEliminate(mulFac,z)
-                    # for keyV in resultVarEli:
-                    #     del self.nodeProb[mulFac]
-                    #     self.nodeFactor.remove(mulFac)
-                    #     self.nodeProb[keyV]=resultVarEli[keyV]
-                    #     self.nodeFactor.append(keyV)
 
                     for keyV in resultVarEli:
                         del self.nodeProb[mulFac]
@@ -284,20 +244,12 @@ class BayesianNetwork:
                         else:
                             self.nodeProb[keyV]=resultVarEli[keyV]
                             self.nodeFactor.append(keyV)
-                # print(FZ)
-                
-            # print("210:",self.nodeFactor)
-            # print("211:",self.nodeProb)
+
             mulFac=self.nodeFactor.pop()
             resultF=None
             if (self.nodeFactor):
                 while (self.nodeFactor):
                     mulFacOne=self.nodeFactor.pop()
-                    # print("219:",mulFac)
-                    # print("221:",mulFacOne)     
-
-                    # print("220:",self.nodeFactor)
-                    # print("220:",self.nodeProb)
                     resultMulFac=self.mulFactor(mulFac,mulFacOne)
 
 
@@ -313,20 +265,15 @@ class BayesianNetwork:
                 resultF= self.nodeProb[mulFac]
                 
             len_query=len(query_variables)
-            # print('247:',resultF)
-            # print('248',query_variables)
             for re in resultF:
                 coun=0
                 for key in query_variables:
-                    # print('252:',re)
                     if (re[self.acronymDict[key]]==query_variables[key]):
                         coun=coun+1
                         if coun==len_query:
-                            # print('255:',re['prob'])
                             result=re['prob']
         else :
             patten=""
-            # print(evidence_variables)
             for ev in evidence_variables:
                 patten+=self.acronymDict[ev]
             for qu in query_variables:
@@ -337,14 +284,12 @@ class BayesianNetwork:
                 for re in self.nodeProb[patten]:
                     coun=0
                     for key in query_variables:
-                        # print('252:',re)
                         if (re!={}):
                             if (re[self.acronymDict[key]]==query_variables[key]):
                                 for keyTwo in evidence_variables:
                                     if (re[self.acronymDict[keyTwo]]==evidence_variables[keyTwo]):
                                         coun=coun+1
                                     if coun==len_query-1:
-                                        # print('255:',re['prob'])
                                         result=re['prob']
                                         break
             else:
@@ -352,7 +297,6 @@ class BayesianNetwork:
                 self.varEliminateByEvidence(evidence_variables)
                 for ev in evidence_variables:
                     self.nodeDomain[self.acronymDict[ev]].remove(evidence_variables[ev])
-                # print(self.nodeProb)
                 #buoc 3 xa ddinh bien can duoc loai bo
                 for qu in query_variables:
                     self.nodesX.remove(self.acronymDict[qu])
@@ -366,16 +310,11 @@ class BayesianNetwork:
                         if z in n :
                             #tap cac nhan to F co chua bien Z
                             FZ.append(n)
-                    # FZcopy=copy.deepcopy(FZ)
                     mulFac=FZ.pop()
                     if (FZ):
                         while (FZ):
-                            # print("181:",mulFac)
-                            # print("182:",self.nodeFactor)
-                            mulFacOne=FZ.pop()
-                            # print("183:",mulFacOne)
-                            # print("184:",self.nodeProb)
 
+                            mulFacOne=FZ.pop()
                             resultMulFac=self.mulFactor(mulFac,mulFacOne)
                             
                             del self.nodeProb[mulFac]
@@ -391,8 +330,7 @@ class BayesianNetwork:
                                     self.nodeProb[key]=resultMulFac[key]
                                     self.nodeFactor.append(key)
                                     mulFac=key
-                        # print('192:',self.nodeProb)
-                        # print('193:',self.nodeFactor)
+
                         resultVarEli=self.varEliminate(mulFac,z)
                         for keyV in resultVarEli:
                             del self.nodeProb[mulFac]
@@ -405,8 +343,7 @@ class BayesianNetwork:
                     else:
                         resultVarEli=self.varEliminate(mulFac,z)
                         for keyV in resultVarEli:
-                            # print(keyV)
-                            # print("203:",self.nodeFactor)
+
                             del self.nodeProb[mulFac]
                             self.nodeFactor.remove(mulFac)
 
@@ -416,19 +353,12 @@ class BayesianNetwork:
                                 self.nodeProb[keyV]=resultVarEli[keyV]
                                 self.nodeFactor.append(keyV)
     
-                    # print(FZ)
-                    
-                # print("210:",self.nodeFactor)
-                # print("211:",self.nodeProb)
                 resultF=None
                 if (len(self.nodeFactor)>1):
                     while (self.nodeFactor):
                         mulFac=self.nodeFactor.pop()
                         mulFacOne=self.nodeFactor.pop()
-                        # print("219:",mulFac)
-                        # print("221:",mulFacOne)     
-                        # print("220:",self.nodeFactor)
-                        # print("220:",self.nodeProb)
+
                         resultMulFac=self.mulFactor(mulFac,mulFacOne)
                         del self.nodeProb[mulFac]
                         del self.nodeProb[mulFacOne]
@@ -449,8 +379,7 @@ class BayesianNetwork:
                     resultF= self.nodeProb[mulFac]
                     
                 len_query=len(query_variables)+len(evidence_variables)
-                # print('247:',resultF)
-                # print('248',query_variables)
+
                 alphaSum=0
                 for re in resultF:
                     alphaSum+=re['prob']
@@ -458,14 +387,12 @@ class BayesianNetwork:
                 for re in resultF:
                     coun=0
                     for key in query_variables:
-                        # print('252:',re)
                         if (re!={}):
                             if (re[self.acronymDict[key]]==query_variables[key]):
                                 for keyTwo in evidence_variables:
                                     if (re[self.acronymDict[keyTwo]]==evidence_variables[keyTwo]):
                                         coun=coun+1
                                     if coun==len_query-1:
-                                        # print('255:',re['prob'])
                                         result=re['prob']/alphaSum
                                         break
         f.close()
@@ -475,7 +402,6 @@ class BayesianNetwork:
         result = 0
         f = open(filename, 'r')
         # YOUR CODE HERE
-
 
         f.close()
         return result
