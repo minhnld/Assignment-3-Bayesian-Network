@@ -80,7 +80,7 @@ class BayesianNetwork:
     def findShareVariableAndMerge(self,varA,varB):
         shareVars=set(varA).intersection(set(varB))
         mergeVars=set(varA).union(set(varB))
-        print(mergeVars)
+        # print(mergeVars)
         return shareVars,mergeVars
 
     def setIntoString(self,sample):
@@ -92,34 +92,35 @@ class BayesianNetwork:
     def varEliminate(self,factor,eliminateVar):
         remainingSet=list(set(factor).difference(set(eliminateVar)))
         factorProb=copy.deepcopy(self.nodeProb[factor])
-        print('Factor ',self.nodeProb[factor])
+        # print('Factor ',self.nodeProb[factor])
         
         recallDict={}
         for f in factorProb:
-            del f[eliminateVar]
-            mergeName=""
-            tempName={}
-            for r in remainingSet:
-                mergeName+=f[r]
-                tempName[r]=f[r]
-                del f[r]
-            if not(mergeName in recallDict) :
-                recallDict[mergeName]=tempName
-            f[mergeName]=f['prob']
-            del f['prob']
+            if (f!={}):
+                del f[eliminateVar]
+                mergeName=""
+                tempName={}
+                for r in remainingSet:
+                    mergeName+=f[r]
+                    tempName[r]=f[r]
+                    del f[r]
+                if not(mergeName in recallDict) :
+                    recallDict[mergeName]=tempName
+                f[mergeName]=f['prob']
+                del f['prob']
         
-        print('107777:',factorProb)
+        # print('107777:',factorProb)
         result = dict(functools.reduce(operator.add, 
         map(collections.Counter, factorProb))) 
         resultList=[]
-        print('106:',result)
+        # print('106:',result)
         for key in result:
             tempObj={}
             for reKey in recallDict[key]:
                 tempObj[reKey]=recallDict[key][reKey]
             tempObj['prob']=result[key]
             resultList.append(tempObj)
-        print('116:',resultList)
+        # print('116:',resultList)
 
         # print(factor)
         # print(factorProb)
@@ -176,18 +177,19 @@ class BayesianNetwork:
             for fB in SetShareInFacB:
                 countS=0
                 for s in shareVars:
-                    if fA[s]==fB[s]:
-                        countS+=1
-                        if countS==countShareVar:
-                            j=j+1
-                            mulFactorAB[j]['prob']=fA['prob']*fB['prob']
-                            countS=0
-                            for m in mergeVars:
-                                # mulFactorAB[j][m]=fShareA[m] if (fShareA[m]) else fShareB[m]
-                                try:
-                                    mulFactorAB[j][m]=fA[m]
-                                except KeyError:
-                                    mulFactorAB[j][m]=fB[m]
+                    if (fA!={}) and (fB!={}):
+                        if (fA[s]==fB[s]):
+                            countS+=1
+                            if countS==countShareVar:
+                                j=j+1
+                                mulFactorAB[j]['prob']=fA['prob']*fB['prob']
+                                countS=0
+                                for m in mergeVars:
+                                    # mulFactorAB[j][m]=fShareA[m] if (fShareA[m]) else fShareB[m]
+                                    try:
+                                        mulFactorAB[j][m]=fA[m]
+                                    except KeyError:
+                                        mulFactorAB[j][m]=fB[m]
         return {self.setIntoString(mergeVars):mulFactorAB}
 
     def exact_inference(self, filename):
@@ -205,7 +207,7 @@ class BayesianNetwork:
         if not(evidence_variables):
             for qu in query_variables:
                 self.nodesX.remove(qu)
-            print(self.nodesX)
+            # print(self.nodesX)
             for z in self.nodesX :
                 FZ=[]
                 for n in self.nodeFactor:
@@ -216,11 +218,11 @@ class BayesianNetwork:
                 mulFac=FZ.pop()
                 if (FZ):
                     while (FZ):
-                        print("181:",mulFac)
-                        print("182:",self.nodeFactor)
+                        # print("181:",mulFac)
+                        # print("182:",self.nodeFactor)
                         mulFacOne=FZ.pop()
-                        print("183:",mulFacOne)
-                        print("184:",self.nodeProb)
+                        # print("183:",mulFacOne)
+                        # print("184:",self.nodeProb)
 
                         resultMulFac=self.mulFactor(mulFac,mulFacOne)
                         
@@ -233,37 +235,48 @@ class BayesianNetwork:
                             self.nodeProb[key]=resultMulFac[key]
                             self.nodeFactor.append(key)
                             mulFac=key
-                    print('192:',self.nodeProb)
-                    print('193:',self.nodeFactor)
+                    # print('192:',self.nodeProb)
+                    # print('193:',self.nodeFactor)
                     resultVarEli=self.varEliminate(mulFac,z)
+                    # for keyV in resultVarEli:
+                    #     del self.nodeProb[mulFac]
+                    #     self.nodeFactor.remove(mulFac)
+                    #     self.nodeProb[keyV]=resultVarEli[keyV]
+                    #     self.nodeFactor.append(keyV)
+
                     for keyV in resultVarEli:
                         del self.nodeProb[mulFac]
                         self.nodeFactor.remove(mulFac)
-                        self.nodeProb[keyV]=resultVarEli[keyV]
-                        self.nodeFactor.append(keyV)
+                        if (keyV in self.nodeProb):
+                            self.nodeProb[keyV]=self.mulFactorOverlap(resultVarEli[keyV],self.nodeProb[keyV],keyV)[keyV]
+                        else:
+                            self.nodeProb[keyV]=resultVarEli[keyV]
+                            self.nodeFactor.append(keyV)
                 else:
                     resultVarEli=self.varEliminate(mulFac,z)
+
                     for keyV in resultVarEli:
-                        print(keyV)
-                        print("203:",self.nodeFactor)
                         del self.nodeProb[mulFac]
                         self.nodeFactor.remove(mulFac)
-                        self.nodeProb[keyV]=resultVarEli[keyV]
-                        self.nodeFactor.append(keyV)    
+                        if (keyV in self.nodeProb):
+                            self.nodeProb[keyV]=self.mulFactorOverlap(resultVarEli[keyV],self.nodeProb[keyV],keyV)[keyV]
+                        else:
+                            self.nodeProb[keyV]=resultVarEli[keyV]
+                            self.nodeFactor.append(keyV)
                 # print(FZ)
                 
-            print("210:",self.nodeFactor)
-            print("211:",self.nodeProb)
+            # print("210:",self.nodeFactor)
+            # print("211:",self.nodeProb)
             mulFac=self.nodeFactor.pop()
             resultF=None
             if (self.nodeFactor):
                 while (self.nodeFactor):
                     mulFacOne=self.nodeFactor.pop()
-                    print("219:",mulFac)
-                    print("221:",mulFacOne)     
+                    # print("219:",mulFac)
+                    # print("221:",mulFacOne)     
 
-                    print("220:",self.nodeFactor)
-                    print("220:",self.nodeProb)
+                    # print("220:",self.nodeFactor)
+                    # print("220:",self.nodeProb)
                     resultMulFac=self.mulFactor(mulFac,mulFacOne)
 
 
@@ -279,134 +292,158 @@ class BayesianNetwork:
                 resultF= self.nodeProb[mulFac]
                 
             len_query=len(query_variables)
-            print('247:',resultF)
-            print('248',query_variables)
+            # print('247:',resultF)
+            # print('248',query_variables)
             for re in resultF:
                 coun=0
                 for key in query_variables:
-                    print('252:',re)
+                    # print('252:',re)
                     if (re[key]==query_variables[key]):
                         coun=coun+1
                         if coun==len_query:
                             # print('255:',re['prob'])
                             result=re['prob']
         else :
-            
-            print(evidence_variables)
-            #Buoc 2 thu giam nhan to theo bang chung
-            self.varEliminateByEvidence(evidence_variables)
+            patten=""
+            # print(evidence_variables)
             for ev in evidence_variables:
-                self.nodeDomain[ev].remove(evidence_variables[ev])
-
-            print(self.nodeProb)
-            #buoc 3 xa ddinh bien can duoc loai bo
+                patten+=ev
             for qu in query_variables:
-                self.nodesX.remove(qu)
-            for ev in evidence_variables:
-                self.nodesX.remove(ev)
-            #buoc 4 chay giai thuat loai bo bien
-            for z in self.nodesX :
-                FZ=[]
-                for n in self.nodeFactor:
-                    if z in n :
-                        #tap cac nhan to F co chua bien Z
-                        FZ.append(n)
-                # FZcopy=copy.deepcopy(FZ)
-                mulFac=FZ.pop()
-                if (FZ):
-                    while (FZ):
-                        print("181:",mulFac)
-                        print("182:",self.nodeFactor)
-                        mulFacOne=FZ.pop()
-                        print("183:",mulFacOne)
-                        print("184:",self.nodeProb)
+                patten+=qu
 
+            if (patten in self.nodeFactor):
+                len_query=len(query_variables)+len(evidence_variables)
+                for re in self.nodeProb[patten]:
+                    coun=0
+                    for key in query_variables:
+                        # print('252:',re)
+                        if (re!={}):
+                            if (re[key]==query_variables[key]):
+                                for keyTwo in evidence_variables:
+                                    if (re[keyTwo]==evidence_variables[keyTwo]):
+                                        coun=coun+1
+                                    if coun==len_query-1:
+                                        # print('255:',re['prob'])
+                                        result=re['prob']
+                                        break
+            else:
+                #Buoc 2 thu giam nhan to theo bang chung
+                self.varEliminateByEvidence(evidence_variables)
+                for ev in evidence_variables:
+                    self.nodeDomain[ev].remove(evidence_variables[ev])
+                # print(self.nodeProb)
+                #buoc 3 xa ddinh bien can duoc loai bo
+                for qu in query_variables:
+                    self.nodesX.remove(qu)
+                for ev in evidence_variables:
+                    self.nodesX.remove(ev)
+                #buoc 4 chay giai thuat loai bo bien
+                for z in self.nodesX :
+                    FZ=[]
+                    for n in self.nodeFactor:
+                        if z in n :
+                            #tap cac nhan to F co chua bien Z
+                            FZ.append(n)
+                    # FZcopy=copy.deepcopy(FZ)
+                    mulFac=FZ.pop()
+                    if (FZ):
+                        while (FZ):
+                            # print("181:",mulFac)
+                            # print("182:",self.nodeFactor)
+                            mulFacOne=FZ.pop()
+                            # print("183:",mulFacOne)
+                            # print("184:",self.nodeProb)
+
+                            resultMulFac=self.mulFactor(mulFac,mulFacOne)
+                            
+                            del self.nodeProb[mulFac]
+                            self.nodeFactor.remove(mulFac)
+                            del self.nodeProb[mulFacOne]
+                            self.nodeFactor.remove(mulFacOne)
+
+                            for key in resultMulFac:
+                                if (key in self.nodeProb):
+                                    self.nodeProb[key]=self.mulFactorOverlap(resultMulFac[key],self.nodeProb[key],key)[key]
+                                    mulFac=key
+                                else:
+                                    self.nodeProb[key]=resultMulFac[key]
+                                    self.nodeFactor.append(key)
+                                    mulFac=key
+                        # print('192:',self.nodeProb)
+                        # print('193:',self.nodeFactor)
+                        resultVarEli=self.varEliminate(mulFac,z)
+                        for keyV in resultVarEli:
+                            del self.nodeProb[mulFac]
+                            self.nodeFactor.remove(mulFac)
+                            if (keyV in self.nodeProb):
+                                self.nodeProb[keyV]=self.mulFactorOverlap(resultVarEli[keyV],self.nodeProb[keyV],keyV)[keyV]
+                            else:
+                                self.nodeProb[keyV]=resultVarEli[keyV]
+                                self.nodeFactor.append(keyV)
+                    else:
+                        resultVarEli=self.varEliminate(mulFac,z)
+                        for keyV in resultVarEli:
+                            # print(keyV)
+                            # print("203:",self.nodeFactor)
+                            del self.nodeProb[mulFac]
+                            self.nodeFactor.remove(mulFac)
+
+                            if (keyV in self.nodeProb):
+                                self.nodeProb[keyV]=self.mulFactorOverlap(resultVarEli[keyV],self.nodeProb[keyV],keyV)[keyV]
+                            else:
+                                self.nodeProb[keyV]=resultVarEli[keyV]
+                                self.nodeFactor.append(keyV)
+    
+                    # print(FZ)
+                    
+                # print("210:",self.nodeFactor)
+                # print("211:",self.nodeProb)
+                mulFac=self.nodeFactor.pop()
+                resultF=None
+                if (self.nodeFactor):
+                    while (self.nodeFactor):
+                        mulFacOne=self.nodeFactor.pop()
+                        # print("219:",mulFac)
+                        # print("221:",mulFacOne)     
+                        # print("220:",self.nodeFactor)
+                        # print("220:",self.nodeProb)
                         resultMulFac=self.mulFactor(mulFac,mulFacOne)
-                        
                         del self.nodeProb[mulFac]
-                        self.nodeFactor.remove(mulFac)
                         del self.nodeProb[mulFacOne]
-                        self.nodeFactor.remove(mulFacOne)
 
                         for key in resultMulFac:
                             if (key in self.nodeProb):
                                 self.nodeProb[key]=self.mulFactorOverlap(resultMulFac[key],self.nodeProb[key],key)[key]
-                                mulFac=key
                             else:
                                 self.nodeProb[key]=resultMulFac[key]
-                                self.nodeFactor.append(key)
-                                mulFac=key
-                    # print('192:',self.nodeProb)
-                    # print('193:',self.nodeFactor)
-                    resultVarEli=self.varEliminate(mulFac,z)
-                    for keyV in resultVarEli:
-                        del self.nodeProb[mulFac]
-                        self.nodeFactor.remove(mulFac)
-                        if (keyV in self.nodeProb):
-                            self.nodeProb[keyV]=self.mulFactorOverlap(resultVarEli[keyV],self.nodeProb[keyV],keyV)[keyV]
-                        else:
-                            self.nodeProb[keyV]=resultVarEli[keyV]
-                            self.nodeFactor.append(keyV)
+
+                            mulFac=key
+                        if (len(self.nodeFactor)==1):
+                            break
+                    resultF= self.nodeProb[mulFac]
                 else:
-                    resultVarEli=self.varEliminate(mulFac,z)
-                    for keyV in resultVarEli:
-                        # print(keyV)
-                        # print("203:",self.nodeFactor)
-                        del self.nodeProb[mulFac]
-                        self.nodeFactor.remove(mulFac)
+                    resultF= self.nodeProb[mulFac]
+                    
+                len_query=len(query_variables)+len(evidence_variables)
+                # print('247:',resultF)
+                # print('248',query_variables)
+                alphaSum=0
+                for re in resultF:
+                    alphaSum+=re['prob']
 
-                        if (keyV in self.nodeProb):
-                            self.nodeProb[keyV]=self.mulFactorOverlap(resultVarEli[keyV],self.nodeProb[keyV],keyV)[keyV]
-                        else:
-                            self.nodeProb[keyV]=resultVarEli[keyV]
-                            self.nodeFactor.append(keyV)
- 
-                # print(FZ)
-                
-            # print("210:",self.nodeFactor)
-            # print("211:",self.nodeProb)
-            mulFac=self.nodeFactor.pop()
-            resultF=None
-            if (self.nodeFactor):
-                while (self.nodeFactor):
-                    mulFacOne=self.nodeFactor.pop()
-                    print("219:",mulFac)
-                    print("221:",mulFacOne)     
-                    print("220:",self.nodeFactor)
-                    print("220:",self.nodeProb)
-                    resultMulFac=self.mulFactor(mulFac,mulFacOne)
-                    del self.nodeProb[mulFac]
-                    del self.nodeProb[mulFacOne]
-
-                    for key in resultMulFac:
-                        if (key in self.nodeProb):
-                            self.nodeProb[key]=self.mulFactorOverlap(resultMulFac[key],self.nodeProb[key],key)[key]
-                        else:
-                            self.nodeProb[key]=resultMulFac[key]
-
-                        mulFac=key
-                    if (len(self.nodeFactor)==1):
-                        break
-                resultF= self.nodeProb[mulFac]
-            else:
-                resultF= self.nodeProb[mulFac]
-                
-            len_query=len(query_variables)+len(evidence_variables)
-            print('247:',resultF)
-            # print('248',query_variables)
-
-            for re in resultF:
-                coun=0
-                for key in query_variables:
-                    # print('252:',re)
-                    if (re[key]==query_variables[key]):
-                        for keyTwo in evidence_variables:
-                            if (re[keyTwo]==evidence_variables[keyTwo]):
-                                coun=coun+1
-                            if coun==len_query-1:
-                                # print('255:',re['prob'])
-                                result=re['prob']
-                                break
+                for re in resultF:
+                    coun=0
+                    for key in query_variables:
+                        # print('252:',re)
+                        if (re!={}):
+                            if (re[key]==query_variables[key]):
+                                for keyTwo in evidence_variables:
+                                    if (re[keyTwo]==evidence_variables[keyTwo]):
+                                        coun=coun+1
+                                    if coun==len_query-1:
+                                        # print('255:',re['prob'])
+                                        result=re['prob']/alphaSum
+                                        break
         f.close()
         return result
 

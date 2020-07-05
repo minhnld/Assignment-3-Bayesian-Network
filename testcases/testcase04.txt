@@ -1,1 +1,1 @@
-I=Thap;D=De,L=Yeu
+L=Manh;G=A

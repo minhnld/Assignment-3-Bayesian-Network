@@ -24,7 +24,7 @@ def readCommand(argv):
                       help='File name which contains the model')                  
     parser.add_option('--testcase',
                       dest='testFilename',
-                      default="testcase01.txt",
+                      default="testcase07.txt",
                       help='File name which contains the testcase')
     (options, _) = parser.parse_args(argv)
     return options

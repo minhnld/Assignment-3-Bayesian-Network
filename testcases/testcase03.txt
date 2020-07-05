@@ -1,1 +1,1 @@
-L=Manh;
+L=Yeu;G=A
