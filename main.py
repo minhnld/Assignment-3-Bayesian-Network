@@ -20,11 +20,11 @@ def readCommand(argv):
                       help='Root test directory which contains testcases')
     parser.add_option('--model',
                       dest='modelFilename',
-                      default='model01.txt',
+                      default='model02.txt',
                       help='File name which contains the model')                  
     parser.add_option('--testcase',
                       dest='testFilename',
-                      default="testcase07.txt",
+                      default="testcase033.txt",
                       help='File name which contains the testcase')
     (options, _) = parser.parse_args(argv)
     return options

@@ -1,1 +1,1 @@
-G=C;D=Kho,L=Yeu,S=Thap
+G=A;D=De,L=Yeu,S=Cao
